@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>新增貼文</title>
+    <link href="statics/icon/favicon.ico" type="image/x-icon" rel="icon">
+    <link href="statics/icon/favicon.ico" type="image/x-icon" rel="shortcut icon">
+    <link rel="stylesheet" type="text/css" href="statics/css/cake.generic.css">
+
+    <script src="statics/js/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div id="container">
+        <div id="header">
+            <h1><a href="http://cakephp.org/">CakePHP: the rapid development php framework</a></h1>
+            <div id="user_id" class="user-info" style="visibility: hidden; display:inline;">6</div>
+            <div id="post_id" class="user-info" style="visibility: hidden; display:inline;">6</div>
+            <div id="community_id" class="user-info" style="visibility: hidden; display:inline;">6</div>
+        </div>
+        <div id="content">
+            <h2>新增貼文</h2>
+            <form>
+				<div class="submit">
+					<input type="button" value="回貼文列表" id="postlist_btn">
+				</div>
+			</form>
+            <form>
+				<div class="submit">
+					<input type="button" value="回首頁" id="main_btn">
+				</div>
+			</form>
+			
+			<div id="flashMessage" class="message" style="display: none;"></div>
+            <form id="form" accept-charset="utf-8">
+                <div style="display:none;"><input type="hidden" name="_method" value="POST"></div>
+                <div class="input text required">
+                	<label for="content">內容</label>
+    				<textarea id="post_content" name="content" placeholder="說說話吧..." style="height:200px"></textarea>
+    			</div>
+                <div class="submit"><input type="button" value="送出貼文" id="submit"></div>
+            </form>
+            
+            <script type="text/javascript">
+            //Post_list.html?community_id=' + value.data[0].community_id+ "&user_id="+myuserId+"&email="+email+"&phone_number="+phone_number+"&name="+name+"&age="+age+"&birthday="+birthday+"&gender="+gender+"&work="+work+"&interest="+interest            
+            
+            function getUrlVars() {
+    			var vars = {};
+    			var parts = window.location.href.replace(
+    				/[?&]+([^=&]+)=([^&]*)/gi, function(m,key, value) {vars[key] = value;});
+    			return vars;
+    		}
+    		/*$(document).ready(function() {
+				$("#main_btn").click(function() {go_to_main()});
+    			//userIsHost();
+    			console.log(checkHost);
+    		});*/
+    		var checkHost = "999";
+    		var community_id = getUrlVars()["community_id"];
+    		var user_id = getUrlVars()["user_id"]; // 1
+			var myuserId = user_id;//單純的複製一筆user_id
+			var email = getUrlVars()["email"]; // 2
+			var phone_number = getUrlVars()["phone_number"]; // 3
+			var name = getUrlVars()["name"]; // 4
+			name = decodeURI(name);
+			var age = getUrlVars()["age"]; // 5
+			var birthday = getUrlVars()["birthday"]; // 6
+			var gender = getUrlVars()["gender"]; // 7
+			if (gender == "true") {gender = "男性";} 
+			else {gender = "女性";}
+			var work = getUrlVars()["work"]; // 8
+			work = decodeURI(work);
+			var interest = getUrlVars()["interest"]; // 9
+			interest = decodeURI(interest);
+			$("#user_id").text(user_id);
+			$("#community_id").text(community_id);
+			
+                $(document).ready(function() {
+                    // 處理表單點擊事件
+                    var $form = $('#submit');
+    				$("#main_btn").click(function() {go_to_main()});
+    				$("#postlist_btn").click(function() {go_to_postlist()});
+
+                    $form.click(function() {
+                        submit();
+                    });
+        			function go_to_postlist(){location.href = "http://localhost:8090/NCU_MIS_SA/Post_list.html?&user_id="+ myuserId+"&community_id="+community_id+"&email="+email+"&phone_number="+phone_number+"&name="+name+"&age="+age+"&birthday="+birthday+"&gender="+gender+"&work="+work+"&interest="+interest;};
+        			function go_to_main(){location.href = "http://localhost:8090/NCU_MIS_SA/main.html?&user_id="+ myuserId+"&email="+email+"&phone_number="+phone_number+"&name="+name+"&age="+age+"&birthday="+birthday+"&gender="+gender+"&work="+work+"&interest="+interest;};
+
+                    function submit() {
+                        var content = $('#post_content').val();
+                        var user_id=$("#user_id").text();
+                        var community_id=$("#community_id").text();
+                    	var post_id=$("#post_id").text();
+                        // 將資料組成JSON格式
+                        var data_object = {
+                        	"user_id": user_id,
+                        	"post_id": post_id,
+                            "content": content,
+                            "community_id":community_id
+                        };
+                        console.log(data_object);
+                        if (content=="") {
+                            alert("欄位不可為空");
+                        }
+                        else{
+                        	// 將JSON格式轉換成字串
+                            var data_string = JSON.stringify(data_object);
+                        	
+                        	console.log(user_id);
+                        	console.log(post_id);
+                        	console.log(community_id);
+
+                            // 發出POST的AJAX請求
+                            $.ajax({
+                                    type: "POST",
+                                    url: "api/post.do",
+                                    data: data_string,
+                                    crossDomain: true,
+                                    cache: false,
+                                    dataType: 'json',
+                                    timeout: 5000,
+                                    success: function (response) {
+                                        $('#flashMessage').html(response.message);
+                                        $('#flashMessage').show();
+                                        if(response.status == 200){
+                                            updateSQLTable(response.response);
+                                        }
+                                        $('#content').val(null);
+                                    },
+                                    error: function () {
+                                        alert("無法連線到伺服器！");
+                                    }
+                            });
+                        } 
+                    }
+                    
+
+                    function updateSQLTable(data) {
+                        $("#sql_log > tbody").empty();
+                        var time = (data.time / 1000000).toFixed(2);
+                        var table_html = "";
+
+                        table_html += '<tr>';
+                        table_html += '<td>' + '1' + '</td>';
+                        table_html += '<td>' + data.sql + '</td>';
+                        table_html += '<td style="text-align: right">' + '0' + '</td>';
+                        table_html += '<td style="text-align: right">' + data.row + '</td>';
+                        table_html += '<td style="text-align: right">' + data.row + '</td>';
+                        table_html += '<td style="text-align: right">' + time + '</td>';
+                        table_html += '</tr>';
+                        $("#sql_log > tbody").append(table_html);
+                        $("#sql_summary").html("(default) " + data.row + " queries took " + time + " ms");
+                    }
+                });
+            </script>
+
+        </div>
+        
+        <div id="footer">
+            <a href="http://www.cakephp.org/" target="_blank" id="cake-powered"><img src="statics/img/cake.power.gif" alt="CakePHP: the rapid development php framework" border="0"></a>
+            <p>CakePHP 2.6.10</p>
+        </div>
+    </div>
+
+    <table class="cake-sql-log" id="sql_log" summary="Cake SQL Log" cellspacing="0">
+        <caption id="sql_summary">(default) 0 queries took 0 ms</caption>
+        <thead>
+            <tr>
+                <th>Nr</th>
+                <th>Query</th>
+                <th>Error</th>
+                <th>Affected</th>
+                <th>Num. rows</th>
+                <th>Took (ms)</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+</body>
+
+</html>

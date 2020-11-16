@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>社員管理</title>
+    <link href="statics/icon/favicon.ico" type="image/x-icon" rel="icon">
+    <link href="statics/icon/favicon.ico" type="image/x-icon" rel="shortcut icon">
+    <link rel="stylesheet" type="text/css" href="statics/css/cake.generic.css">
+
+    <script src="statics/js/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div id="container">
+        <div id="header">
+            <h1><a href="http://cakephp.org/">CakePHP: the rapid development php framework</a></h1>
+            <div id="user_id" class="user-info" style="visibility: hidden; display:inline;">lulala</div>
+        <div id="content">
+            <h2>加入申請管理</h2>
+            <form>
+				<div class="submit">
+					<input type="button" value="社員管理" id="ManageCommunity">
+				</div>
+			</form>
+            <form>
+				<div class="submit">
+					<input type="button" value="回首頁" id="main_btn">
+				</div>
+			</form>
+            <div id="flashMessage" class="message" style="display: none;"></div>
+            
+            <h3>待申請社員</h3>
+            <table id="table" class="nember">
+                <thead>
+                    <tr>
+                        <th>會員編號</th>
+                        <th>名稱</th>
+                        <th>狀態</th>
+                        <th>動作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            
+            <script type="text/javascript">
+            function getUrlVars() {
+    			var vars = {};
+    			var parts = window.location.href.replace(
+    				/[?&]+([^=&]+)=([^&]*)/gi, function(m,key, value) {vars[key] = value;});
+    			return vars;
+    		}
+
+    		var checkHost = "999";
+    		var community_id = getUrlVars()["community_id"];
+    		var user_id = getUrlVars()["user_id"]; // 1
+			var myuserId = user_id;//單純的複製一筆user_id
+			var email = getUrlVars()["email"]; // 2
+			var phone_number = getUrlVars()["phone_number"]; // 3
+			var name = getUrlVars()["name"]; // 4
+			name = decodeURI(name);
+			var age = getUrlVars()["age"]; // 5
+			var birthday = getUrlVars()["birthday"]; // 6
+			var gender = getUrlVars()["gender"]; // 7
+			if (gender == "true") {gender = "男性";} 
+			else {gender = "女性";}
+			var work = getUrlVars()["work"]; // 8
+			work = decodeURI(work);
+			var interest = getUrlVars()["interest"]; // 9
+			interest = decodeURI(interest);
+			$("#user_id").text(user_id);
+			
+			function go_to_ManageCommunity() {location.href = "http://localhost:8090/NCU_MIS_SA/community_management_member.html?&user_id="+ myuserId+"&community_id="+community_id+"&email="+email+"&phone_number="+phone_number+"&name="+name+"&age="+age+"&birthday="+birthday+"&gender="+gender+"&work="+work+"&interest="+interest;}
+
+                // 全域變數紀錄SQL指令下的次數
+                var sql_num = 0;
+                var user_id;
+                var community_id;
+                
+                function getNember() {
+                	var data="";
+					data+="user_id="+user_id;
+                	data+="&community_id="+community_id;
+                	console.log("community_id="+community_id);
+                    // 發出POST的GET請求取得所有會員列表
+                    $.ajax({
+                            type: "GET",
+                            url: "api/user_community.do",
+                            crossDomain: true,
+                            cache: false,
+                            data:data,
+                            dataType: 'json',
+                            timeout: 5000,
+                            success: function (response) {
+                                if(response.status == 200){
+                                    updateNemberTable(response.response.data);
+                                    updateSQLTable(response.response);
+                                }
+                                console.log(response);
+                            },
+                            error: function () {
+                                alert("無法連線到伺服器！");
+                            }
+                    });
+                    
+                    
+                }
+                
+                // 更新會員列表表格
+                
+                function updateNemberTable(data) {
+                    $(".nember >tbody").empty();
+                    var table_html = '';
+                    var user_id=$("#user_id").text();
+                    $.each(data, function(index, value) {
+                    	table_html += '<tr><td scope="row">' + value['user_id'] + '</td>';
+                    	table_html += '<td>' + value['name'] + '</td>';
+                    	if(value['isHostApproved']==true){
+                    		table_html += '<td>邀請中</td>';
+                    	}
+                    	if(value['isMemberApproved']==true){
+                    		table_html += '<td>申請加入</td>';
+                    	}
+                    	table_html += '<td><a href="javascript: addMember('+user_id+','+value['user_id']+','+community_id+ ');"><font color="#367889">同意</font></a> |';
+                        table_html += '<a href="javascript: deleteMember(' + value['user_community_id'] + ');"><font color="#367889">拒絕</font></a></td></tr>';
+                        
+                    })
+
+                    $(".nember >tbody").append(table_html);
+                }
+                function addMember(operator_id,user_id,community_id){
+                	var check = window.confirm("同意該會員加入社群？");
+                    if (check == true) {
+                        console.log("You pressed OK!");
+                        var request = {
+                        		"community_id": community_id,
+                        		"operator_id":operator_id,
+                        		"user_id":user_id,
+                        		"isHostApproved": true
+                        };
+                        var data_string = JSON.stringify(request);
+                        $.ajax({
+                            type: "PUT",
+                            url: "api/user_community.do",
+                            crossDomain: true,
+                            data: data_string,
+                            cache: false,
+                            dataType: 'json',
+                            timeout: 5000,
+                            success: function (response) {
+                                if(response.status == 200){
+                                    $("#flashMessage").html("執行成功");
+                                    $("#flashMessage").show();
+                                    //window.location.reload();
+                                }
+                                else if(response.status == 400){
+                                	 $("#flashMessage").html("它已經是社員了");
+                                     $("#flashMessage").show();
+                                     //window.location.reload();
+                                }
+                                console.log(response);
+                            },
+                            error: function () {
+                                alert("無法連線到伺服器！");
+                            }
+                        });
+                    }
+                    else {
+                        console.log("You pressed Cancel!");
+                    }
+                }
+                
+                function deleteMember(user_community_id){
+                	var check = window.confirm("確認執行該動作？");
+                	if (check == true){
+                		var request = {'user_community_id': user_community_id};
+                        var data_string = JSON.stringify(request);
+                        $.ajax({
+                            type: "DELETE",
+                            url: "api/user_community.do",
+                            crossDomain: true,
+                            data: data_string,
+                            cache: false,
+                            dataType: 'json',
+                            timeout: 5000,
+                            success: function (response) {
+                            	$("#flashMessage").html("執行成功");
+                                $("#flashMessage").show();
+                                
+                                console.log(response);
+                                //window.location.reload();
+                            },
+                            error: function () {
+                                alert("更新失敗，無法連線到伺服器！");
+                            }
+                        });
+                	}
+                }
+                
+           
+                // 更新SQL指令歷史表格
+                function updateSQLTable(data) {
+                    $("#sql_log > tbody").empty();
+                    var time = (data.time / 1000000).toFixed(2);
+                    var table_html = "";
+                    
+                    sql_num = 0;
+                    sql_num += 1
+
+                    table_html += '<tr>';
+                    table_html += '<td>' + sql_num + '</td>';
+                    table_html += '<td>' + data.sql + '</td>';
+                    table_html += '<td style="text-align: right">' + '0' + '</td>';
+                    table_html += '<td style="text-align: right">' + data.row + '</td>';
+                    table_html += '<td style="text-align: right">' + data.row + '</td>';
+                    table_html += '<td style="text-align: right">' + time + '</td>';
+                    table_html += '</tr>';
+                    $("#sql_log > tbody").append(table_html);
+                    $("#sql_summary").html("(default) " + data.row + " queries took " + time + " ms");
+                }
+                
+				function go_to_main(){location.href = "http://localhost:8090/NCU_MIS_SA/main.html?&user_id="+ myuserId+"&email="+email+"&phone_number="+phone_number+"&name="+name+"&age="+age+"&birthday="+birthday+"&gender="+gender+"&work="+work+"&interest="+interest;};
+
+                $(document).ready(function() {
+					$("#main_btn").click(function() {go_to_main()});
+					$("#ManageCommunity").click(function() {go_to_ManageCommunity();});
+                	getNember();
+                    
+                    var $form = $('#submit');
+                    
+        			
+        			
+                });
+
+            </script>
+        </div>
+        <div id="footer">
+            <a href="http://www.cakephp.org/" target="_blank" id="cake-powered"><img src="statics/img/cake.power.gif" alt="CakePHP: the rapid development php framework" border="0"></a>
+            <p>CakePHP 2.6.10</p>
+        </div>
+    </div>
+    <table class="cake-sql-log" id="sql_log" summary="Cake SQL Log" cellspacing="0">
+        <caption id="sql_summary">(default) 0 query took 0 ms</caption>
+        <thead>
+            <tr>
+                <th>Nr</th>
+                <th>Query</th>
+                <th>Error</th>
+                <th>Affected</th>
+                <th>Num. rows</th>
+                <th>Took (ms)</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</body>
+
+</html>

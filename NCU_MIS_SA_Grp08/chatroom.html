@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>訊息瀏覽</title>
+    <link href="statics/icon/favicon.ico" type="image/x-icon" rel="icon">
+    <link href="statics/icon/favicon.ico" type="image/x-icon" rel="shortcut icon">
+    <link rel="stylesheet" type="text/css" href="statics/css/cake.generic.css">
+
+    <script src="statics/js/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div id="container">
+        <div id="header">
+            <h1><a href="http://cakephp.org/">CakePHP: the rapid development php framework</a></h1>
+            <div id="user_id" class="user-info" style="visibility: hidden; display:inline;">1</div>
+            <div id="match_id" class="user-info" style="visibility: hidden; display:inline;">1</div>
+        <div id="content">
+            <h2>訊息系統，向對方說哈囉</h2>
+                    <form>
+						<div class="submit">
+							<input type="button" value="回首頁" id="main_btn">
+						</div>
+					</form>
+					<form>
+						<div class="submit">
+							<input type="button" value="新增訊息" id="message_btn">
+						</div>
+					</form>
+            <div id="flashMessage" class="message" style="display: none;"></div>
+            <table id="table">
+                <thead>
+                    <tr>
+                        <th>發送人</th>
+                        <th>訊息內容</th>
+                        <th>動作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <script type="text/javascript">
+            function getUrlVars() {
+				var vars = {};
+					var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+					vars[key] = value;
+				});
+				return vars;
+			}
+
+            var match_id = getUrlVars()["match_id"];
+			var user_id = getUrlVars()["user_id"]; // 1
+			var myuserId = user_id;//單純的複製一筆user_id
+			var email = getUrlVars()["email"]; // 2
+			var phone_number = getUrlVars()["phone_number"]; // 3
+			var name = getUrlVars()["name"]; // 4
+			name = decodeURI(name);
+			var age = getUrlVars()["age"]; // 5
+			var birthday = getUrlVars()["birthday"]; // 6
+			var gender = getUrlVars()["gender"]; // 7
+			console.log(gender);
+			if (gender == "true") {gender = "男性";} 
+			else {gender = "女性";}
+			var work = getUrlVars()["work"]; // 8
+			work = decodeURI(work);
+
+			var interest = getUrlVars()["interest"]; // 9
+			interest = decodeURI(interest);
+			$("#user_id").text(user_id);
+			$("#match_id").text(match_id);
+			
+                // 全域變數紀錄SQL指令下的次數
+                var sql_num = 0;
+                
+                function getAllMessage() {
+                	var match_id=$("#match_id").text();
+                	var data="";
+                	data+="match_id=";
+                	data+=match_id;
+                    // 發出POST的GET請求取得所有會員列表
+                    $.ajax({
+                            type: "GET",
+                            url: "api/message.do",
+                            crossDomain: true,
+                            cache: false,
+                            data:data,
+                            dataType: 'json',
+                            timeout: 5000,
+                            success: function (response) {
+                                if(response.status == 200){
+                                    updateTable(response.response.data);
+                                    updateSQLTable(response.response);
+                                }
+                                console.log(response);
+                            },
+                            error: function () {
+                                alert("無法連線到伺服器！");
+                            }
+                    });
+                }
+                
+                // 更新會員列表表格
+                function updateTable(data) {
+                    $("#table > tbody").empty();
+                    var table_html = '';
+                    $.each(data, function(index, value) {
+                        table_html += '<tr><td scope="row">' + value['name'] + '</td>';
+                        table_html += '<td>' + value['message_content'] + '</td>';
+                        table_html += '<td><a href="javascript: deleteMessage(' + value['message_id'] + ');"><font color="#367889">刪除</font></a></td></tr>';
+                    })
+
+                    $("#table > tbody").append(table_html);
+                }
+                
+                var sql_num = 0;
+                function deleteMessage(message_id) {
+                    var check = window.confirm("確認刪除訊息？");
+                    if (check == true) {
+                        console.log("You pressed OK!");
+                        var request = {
+                        		
+                        		"message_id": message_id
+                        };
+                        var data_string = JSON.stringify(request);
+                        $.ajax({
+                            type: "DELETE",
+                            url: "api/message.do",
+                            crossDomain: true,
+                            data: data_string,
+                            cache: false,
+                            dataType: 'json',
+                            timeout: 5000,
+                            success: function (response) {
+                                if(response.status == 200){
+                                    $("#flashMessage").html("成功刪除訊息");
+                                    $("#flashMessage").show();
+                                    getAllMessage();
+                                }
+                                console.log(response);
+                            },
+                            error: function () {
+                                alert("無法連線到伺服器！");
+                            }
+                        });
+                    }
+                    else {
+                        console.log("You pressed Cancel!");
+                    }
+                }
+                
+                // 更新SQL指令歷史表格
+                function updateSQLTable(data) {
+                    $("#sql_log > tbody").empty();
+                    var time = (data.time / 1000000).toFixed(2);
+                    var table_html = "";
+                    
+                    sql_num = 0;
+                    sql_num += 1
+
+                    table_html += '<tr>';
+                    table_html += '<td>' + sql_num + '</td>';
+                    table_html += '<td>' + data.sql + '</td>';
+                    table_html += '<td style="text-align: right">' + '0' + '</td>';
+                    table_html += '<td style="text-align: right">' + data.row + '</td>';
+                    table_html += '<td style="text-align: right">' + data.row + '</td>';
+                    table_html += '<td style="text-align: right">' + time + '</td>';
+                    table_html += '</tr>';
+                    $("#sql_log > tbody").append(table_html);
+                    $("#sql_summary").html("(default) " + data.row + " queries took " + time + " ms");
+                }
+				function go_to_main(){location.href = "http://localhost:8090/NCU_MIS_SA/main.html?&user_id="+ myuserId+"&email="+email+"&phone_number="+phone_number+"&name="+name+"&age="+age+"&birthday="+birthday+"&gender="+gender+"&work="+work+"&interest="+interest;};
+				function go_to_message(){location.href = "http://localhost:8090/NCU_MIS_SA/message.html?&user_id="+ myuserId+"&email="+email+"&phone_number="+phone_number+"&name="+name+"&age="+age+"&birthday="+birthday+"&gender="+gender+"&work="+work+"&interest="+interest+"&match_id="+match_id;};
+
+                $(document).ready(function() {
+					$("#main_btn").click(function() {go_to_main()});
+					$("#message_btn").click(function() {go_to_message()});
+
+                    getAllMessage();
+                });
+            </script>
+        </div>
+        <div id="footer">
+            <a href="http://www.cakephp.org/" target="_blank" id="cake-powered"><img src="statics/img/cake.power.gif" alt="CakePHP: the rapid development php framework" border="0"></a>
+            <p>CakePHP 2.6.10</p>
+        </div>
+    </div>
+    <table class="cake-sql-log" id="sql_log" summary="Cake SQL Log" cellspacing="0">
+        <caption id="sql_summary">(default) 0 query took 0 ms</caption>
+        <thead>
+            <tr>
+                <th>Nr</th>
+                <th>Query</th>
+                <th>Error</th>
+                <th>Affected</th>
+                <th>Num. rows</th>
+                <th>Took (ms)</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</body>
+
+</html>

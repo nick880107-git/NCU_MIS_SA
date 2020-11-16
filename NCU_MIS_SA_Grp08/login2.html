@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>CakePHP: the rapid development php framework: Members</title>
+    <link href="statics/icon/favicon.ico" type="image/x-icon" rel="icon">
+    <link href="statics/icon/favicon.ico" type="image/x-icon" rel="shortcut icon">
+    <link rel="stylesheet" type="text/css" href="statics/css/cake.generic.css">
+
+    <script src="statics/js/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div id="container">
+        <div id="header">
+            <h1><a href="http://cakephp.org/">CakePHP: the rapid development php framework</a></h1>
+        </div>
+        
+        <div id="content">
+            <h2 id=tit>登入介面</h2>
+
+            <div id="flashMessage" class="message" style="display: none;"></div>
+			<div id="hidden-p3">
+            <form id="form" accept-charset="utf-8">
+                <div style="display:none;"><input type="hidden" name="_method" value="POST"></div>
+           
+                <div class="input email required">
+                    <label for="member_email">電郵</label>
+                    <input name="email" maxlength="50" type="email" id="member_email" required="required">
+                </div>
+ 
+                <div class="input password required">
+                    <label for="member_password">密碼</label>
+                    <input name="password" maxlength="30" type="password" id="member_password" required="required">
+                </div>
+ 
+                <div class="submit"><input type="button" value="登入" id="submit"></div>
+                <div class="submit"><input type="button" value="註冊" id="register"></div>
+                
+                
+              </div>
+                <p2></p2>
+            </form>
+            
+            
+            <script type="text/javascript">
+                $(document).ready(function() {
+                    // 處理表單點擊事件
+                    var $form = $('#submit');
+                    
+                    $form.click(function() {
+                        submit();
+                        //$("#hidden-p3").hide();
+                        //$("#tit").text("主畫面");
+                    });
+                    
+                    $("#register").click(function() {
+                        register();
+                        //$("#hidden-p3").hide();
+                        //$("#tit").text("主畫面");
+                    }); 
+
+                    function register(){
+						location.href = "http://localhost:8090/NCU_MIS_SA/register3.html";
+                    }
+                    
+                    function submit() {
+                        var email = $('#member_email').val();
+                        var password = $('#member_password').val();
+                      
+                        var data_string = "email="+email+"&hashed_password="+password;						
+                            // 發出GET的AJAX請求
+                   	          $.ajax({
+                                    type: "GET",
+                                    url: "api/user.do",
+                                    crossDomain: true,
+                                    data: data_string,
+                                    cache: false,
+                                    dataType: 'json',
+                                    timeout: 5000,
+                                    success: function (response) {
+                                        $('#flashMessage').html(response.message);
+                                        $('#flashMessage').show();
+                                        if(response.status == 200){
+                                            updateSQLTable(response.response);
+                                            console.log(response.response);
+											name = response.response.data[0].name;
+											gender = response.response.data[0].gender;
+											user_id = response.response.data[0].user_id;
+										    birthday = response.response.data[0].birthday;
+											if (gender == true){
+												gender_string = "男";
+											}else{
+												gender_string = "女";
+											}
+											interest = response.response.data[0].interest;
+											
+											work = response.response.data[0].work;
+											email = response.response.data[0].email;
+											phone_number = response.response.data[0].phone_number;
+											age = response.response.data[0].age;
+											alert("登入成功! 按下確定即跳轉頁面。");
+											location.href = "http://localhost:8090/NCU_MIS_SA/main.html?name="+name+"&gender="+gender+"&user_id="+user_id+"&birthday="+birthday+"&interest="+interest+"&work="+work+"&email="+email+"&phone_number="+phone_number+"&age="+age;
+											 //$("p2").append("哈囉~~ "+name+" 以下是你的基本資訊喔~<br></br>你的生日是: "+birthday+"<br></br>你的性別是: "+gender_string+"<br></br>你的興趣是: "+interest);
+                                        }
+                                    },
+                                    error: function () {
+                                        alert("沒有你這個人呦 呵呵^_^");
+                                    }
+                            });
+                        }
+                    
+
+                    function updateSQLTable(data) {
+                        $("#sql_log > tbody").empty();
+                        var time = (data.time / 1000000).toFixed(2);
+                        var table_html = "";
+
+                        table_html += '<tr>';
+                        table_html += '<td>' + '1' + '</td>';
+                        table_html += '<td>' + data.sql + '</td>';
+                        table_html += '<td style="text-align: right">' + '0' + '</td>';
+                        table_html += '<td style="text-align: right">' + data.row + '</td>';
+                        table_html += '<td style="text-align: right">' + data.row + '</td>';
+                        table_html += '<td style="text-align: right">' + time + '</td>';
+                        table_html += '</tr>';
+                        $("#sql_log > tbody").append(table_html);
+                        $("#sql_summary").html("(default) " + data.row + " queries took " + time + " ms");
+                    }
+                });
+            </script>
+
+        </div>
+        
+        <div id="footer">
+            <a href="http://www.cakephp.org/" target="_blank" id="cake-powered"><img src="statics/img/cake.power.gif" alt="CakePHP: the rapid development php framework" border="0"></a>
+            <p>CakePHP 2.6.10</p>
+        </div>
+    </div>
+
+    <table class="cake-sql-log" id="sql_log" summary="Cake SQL Log" cellspacing="0">
+        <caption id="sql_summary">(default) 0 queries took 0 ms</caption>
+        <thead>
+            <tr>
+                <th>Nr</th>
+                <th>Query</th>
+                <th>Error</th>
+                <th>Affected</th>
+                <th>Num. rows</th>
+                <th>Took (ms)</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+</body>
+
+</html>

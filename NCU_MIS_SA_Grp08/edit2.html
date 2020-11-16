@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>CakePHP: the rapid development php framework: Members</title>
+    <link href="statics/icon/favicon.ico" type="image/x-icon" rel="icon">
+    <link href="statics/icon/favicon.ico" type="image/x-icon" rel="shortcut icon">
+    <link rel="stylesheet" type="text/css" href="statics/css/cake.generic.css">
+
+    <script src="statics/js/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div id="container">
+        <div id="header">
+            <h1><a href="http://cakephp.org/">CakePHP: the rapid development php framework</a></h1>
+        </div>
+        <div id="content">
+            <h2>來更新你的會員資料吧!</h2>
+            <form id="form" accept-charset="utf-8">
+                <div style="display:none;"><input type="hidden" name="_method" value="POST"></div>
+   
+                <div class="input email required">
+                    <label for="user_email">信箱</label>
+                    <input name="email" maxlength="30" type="email" id="user_email" required="required">
+                </div>
+                <div class="input password required">
+                    <label for="user_password">密碼</label>
+                    <input name="password" maxlength="50" type="email" id="user_password" required="required">
+                </div>
+                <div class="input phone_number required">
+                    <label for="user_phone_number">電話</label>
+                    <input name="phone_number" maxlength="30" type="text" id="user_phone_number" required="required">
+                </div>                
+                <div class="input name required">
+                    <label for="user_name">姓名</label>
+                    <input name="name" maxlength="30" type="text" id="user_name" required="required">
+                </div>                
+     
+                <div class="input work required">
+                    <label for="user_work">工作</label>
+                    <input name="work" maxlength="30" type="text" id="user_work" required="required">
+                </div>                
+                <div class="input interest required">
+                    <label for="user_interest">興趣</label>
+                    <input name="interest" maxlength="30" type="text" id="user_interest" required="required">
+                </div>
+                <div class="input gender required">
+                    <label for="user_gender">性別</label>
+                    <input name="gender" maxlength="30" type="text" id="user_gender" required="required">
+                </div>   
+               
+                <div class="submit"><input type="button" value="更新" id="submit"></div>
+                <div id="flashMessage" class="message" style="display: none;"></div>
+                
+                <div id="seeme" class="submit" style="display: none;"><input type="button" value="回首頁" id="main_btn"></div>
+                
+            </form>
+
+            <script type="text/javascript">
+                // 取得網址參數
+                /*
+                var url_string = window.location.href;
+                var url = new URL(url_string);
+                var id = url.searchParams.get("id");
+                var sql_num = 0;
+				*/
+				
+	    		function getUrlVars() {
+					var vars = {};
+						var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+						vars[key] = value;
+					});
+					return vars;
+				}
+                var sql_num = 0;
+
+                var user_id = getUrlVars()["user_id"]; // 1
+    			var myuserId = user_id;//單純的複製一筆user_id
+    			var email = getUrlVars()["email"]; // 2
+    			var phone_number = getUrlVars()["phone_number"]; // 3
+    			var name = getUrlVars()["name"]; // 4
+    			name = decodeURI(name);
+    			var age = getUrlVars()["age"]; // 5
+    			var birthday = getUrlVars()["birthday"]; // 6
+    			var gender = getUrlVars()["gender"]; // 7
+    			console.log(gender);
+    			//if (gender == "true" or gender=="男性") {gender = "男性";}
+    			//else {gender = "女性";}
+    			var work = getUrlVars()["work"]; // 8
+    			work = decodeURI(work);
+
+    			var interest = getUrlVars()["interest"]; // 9
+    			interest = decodeURI(interest);
+				console.log(user_id);
+                function updateMember(user_id) {
+                    var email2 = $('#user_email').val();
+                    var password2 = $('#user_password').val();
+                    var phone2 = $('#user_phone_number').val();
+                    var name2 = $('#user_name').val();
+                    //var age = $('#user_age').val();
+                    //var birthday = $('#user_birthday').val();
+                    var gender = $('#user_gender').val();
+                    var work2 = $('#user_work').val();
+                    var interest2 = $('#user_interest').val();
+					email = email2;
+					password = password2;
+					phone = phone2;
+					name = name2;
+					work = work2;
+					interest = interest2;
+					if(gender == "boy"){
+						gender = true;
+					}else{
+						gender = false;
+					}
+                        // 將資料組成JSON格式
+                        var data_object = {
+                        		"user_id":user_id,
+                          		"email": email2,
+                                "hashed_password": password2,
+                                "phone_number":phone2,
+                                "name":name2,
+                                "work":work2,
+                                "interest":interest2,
+                                "gender":gender,
+                        };
+
+                        // 將JSON格式轉換成字串
+                        var data_string = JSON.stringify(data_object);
+
+                        // 發出POST的PUT請求
+                        $.ajax({
+                                type: "PUT",
+                                url: "api/user.do",
+                                data: data_string,
+                                crossDomain: true,
+                                cache: false,
+                                dataType: 'json',
+                                timeout: 5000,
+                                success: function (response) {
+                                    $('#flashMessage').html(response.message);
+                                    $('#flashMessage').show();
+                                    $('#seeme').show();
+
+                                    if(response.status == 200){
+                                        updateSQLTable(response.response);
+                                        getMember();
+                                    }
+                                },
+                                error: function () {
+                                    alert("無法連線到伺服器！");
+                                }
+                        });
+        				//function go_to_main(){location.href = "http://localhost:8090/NCU_MIS_SA/main.html?&user_id="+ user_id2+"&email="+email2+"&phone_number="+phone2+"&name="+name2+"&age="+age+"&birthday="+birthday+"&gender="+gender+"&work="+work2+"&interest="+interest2};
+
+                }
+				function go_to_main(){location.href = "http://localhost:8090/NCU_MIS_SA/main.html?&user_id="+ myuserId+"&email="+email+"&phone_number="+phone+"&name="+name+"&age="+age+"&birthday="+birthday+"&gender="+gender+"&work="+work+"&interest="+interest};
+
+
+                // 更新SQL指令歷史表格
+                function updateSQLTable(data) {
+                    var time = (data.time / 1000000).toFixed(2);
+                    var table_html = "";
+                    
+                    sql_num += 1
+
+                    table_html += '<tr>';
+                    table_html += '<td>' + sql_num + '</td>';
+                    table_html += '<td>' + data.sql + '</td>';
+                    table_html += '<td style="text-align: right">' + '0' + '</td>';
+                    table_html += '<td style="text-align: right">' + data.row + '</td>';
+                    table_html += '<td style="text-align: right">' + data.row + '</td>';
+                    table_html += '<td style="text-align: right">' + time + '</td>';
+                    table_html += '</tr>';
+                    $("#sql_log > tbody").append(table_html);
+                    $("#sql_summary").html("(default) " + data.row + " queries took " + time + " ms");
+                }
+
+                function getMember() {
+                    $.ajax({
+                        type: "GET",
+                        url: "api/user.do",
+                        crossDomain: true,
+                        data: "user_id=" + user_id,
+                        cache: false,
+                        dataType: 'json',
+                        timeout: 5000,
+                        success: function (response) {
+                            if(response.status == 200){
+                            	updateSQLTable(response.response);
+                            	document.getElementById('user_email').value = response['response']['data'][0]['email'];
+                            	document.getElementById('user_password').value = response['response']['data'][0]['hashed_password'];
+                            	document.getElementById('user_phone_number').value = response['response']['data'][0]['phone_number'];
+                            	document.getElementById('user_name').value = response['response']['data'][0]['name'];
+                            	document.getElementById('user_interest').value = response['response']['data'][0]['interest'];
+                            	document.getElementById('user_work').value = response['response']['data'][0]['work'];
+                            }
+                            console.log(response);
+                        },
+                        error: function () {
+                            alert("無法連線到伺服器！");
+                        }
+                    });
+                }
+
+                $('#submit').click(function() {
+                    updateMember(user_id)
+                });
+
+                $(document).ready(function() {
+                	// 發出GET的AJAX請求取得原本該會員的資料
+                 	$("#sql_log > tbody").empty();
+                    getMember();
+					$("#main_btn").click(function() {go_to_main()});
+
+                });
+                $("#relogin").click(function() {
+					location.href = "http://localhost:8090/NCU_MIS_SA/login2.html";
+                });
+
+            </script>
+        </div>
+        <div id="footer">
+            <a href="http://www.cakephp.org/" target="_blank" id="cake-powered"><img src="statics/img/cake.power.gif" alt="CakePHP: the rapid development php framework" border="0"></a>
+            <p>CakePHP 2.6.10</p>
+        </div>
+    </div>
+
+    <table class="cake-sql-log" id="sql_log" summary="Cake SQL Log" cellspacing="0">
+        <caption id="sql_summary">(default) 0 query took 0 ms</caption>
+        <thead>
+            <tr>
+                <th>Nr</th>
+                <th>Query</th>
+                <th>Error</th>
+                <th>Affected</th>
+                <th>Num. rows</th>
+                <th>Took (ms)</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</body>
+
+</html>

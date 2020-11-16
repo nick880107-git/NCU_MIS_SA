@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1">
+<script src="statics/js/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
+  <style>
+
+      * {
+        box-sizing: border-box;
+      }
+      input[type=text], select {
+        width: 70%;
+        padding: 12px 20px;
+        margin: 4px 0;
+        display: inline-block;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+      input[type=submit] {
+        background-color: #f22613;
+        color: white;
+        padding: 5px 8px;
+        margin: 4px;
+        border: none;
+        border-radius: 2px;
+        cursor: pointer;
+      }
+
+      .menu {
+        height: 70px;
+        padding: auto;
+        font-size: 28px;
+        background: #F5F0E7;
+        background-color:#aaa;
+      }
+      /* Create two equal columns that floats next to each other */
+      .column1 {
+        float: left;
+        width: 30%;
+        padding: 10px;
+        height: auto; /* Should be removed. Only for demonstration */
+      }
+      .column2 {
+        float: left;
+        width: 70%;
+        padding: 50px;
+        height: auto; /* Should be removed. Only for demonstration */
+      }
+      .posting {
+        text-align:center;
+        width: 100%;
+        padding: 10px;
+        margin: 30px;
+        background-color: white;
+      }
+      .post {
+        width: 100%;
+        padding: 30px;
+        margin: 30px;
+        background-color: white;
+      }
+      /* Clear floats after the columns */
+      .row:after {
+        content: "";
+        display: table;
+        clear: both;
+      }
+  </style>
+
+</head>
+<body>
+<!-- ... this is top ... -->
+  	<div class="menu" >
+
+  	</div>
+            <form>
+				<div class="submit">
+					<input type="button" value="回社群介面" id="postlist_btn">
+				</div>
+			</form>
+<ul><h2>社群系統</h2></ul>
+<div style="visibility: hidden; display:inline;">user_id</div><div style="visibility: hidden; display:inline;" id="user_id"><h2>1</h2></div>
+<div style="visibility: hidden; display:inline;">community_id</div><div style="visibility: hidden; display:inline;" id="community_id"><h2>4</h2></div>
+
+<div style="background-color:#aaa">
+
+
+
+
+
+<!-- ... this is column1 ... -->
+<div class="row">
+  <div class="column1" style="background-color:#aaa;">
+
+
+
+
+  </div>
+
+
+
+
+
+<!-- ... this is column2 ... -->
+
+  <div class="column2" style="background-color:#bbb">
+
+
+
+
+    <div class="post">
+      <form method="DELETE" action="#">
+        <p><button id="delete-post" type=submit style="float: right;" value="33">Delete</button></p>
+        <h3><div id="post_id">如何瞞過女友跟他閨密出去 我已經受夠他的大小姐脾氣了 是時候來個新年新希望</div></h3>
+        <div id="post_id"><h2>2</h2></div>
+      </form>
+
+      <form method="DELETE" action="#">
+        <ul><li><h4 style="display:inline;"><div id="comment_id" style="display:inline;">喔</div></h4>
+          <input id="delete-comment" type=submit style="float: right;" value="Delete"></input></li></ul>
+      </form>
+    </div>
+
+
+
+
+  </div>
+
+</div>
+
+<script type="text/javascript">
+
+
+function getUrlVars() {
+	var vars = {};
+	var parts = window.location.href.replace(
+		/[?&]+([^=&]+)=([^&]*)/gi, function(m,key, value) {vars[key] = value;});
+	return vars;
+}
+var community_id = getUrlVars()["community_id"];
+var user_id = getUrlVars()["user_id"]; // 1
+var myuserId = user_id;//單純的複製一筆user_id
+var email = getUrlVars()["email"]; // 2
+var phone_number = getUrlVars()["phone_number"]; // 3
+var name = getUrlVars()["name"]; // 4
+name = decodeURI(name);
+var age = getUrlVars()["age"]; // 5
+var birthday = getUrlVars()["birthday"]; // 6
+var gender = getUrlVars()["gender"]; // 7
+if (gender == "true") {gender = "男性";} 
+else {gender = "女性";}
+var work = getUrlVars()["work"]; // 8
+work = decodeURI(work);
+var interest = getUrlVars()["interest"]; // 9
+interest = decodeURI(interest);
+//$("#user_id").text(user_id);
+//$("#community_id").text(community_id);
+//var sql_num = 0;
+function deletePost(id) {
+    var check = window.confirm("亲 確認刪除貼文？");
+    if (check == true) {
+        console.log("You pressed OK!");
+        var request = {'post_id': id};
+        var post_string = JSON.stringify(request);
+        $.ajax({
+            type: "DELETE",
+            url: "api/post.do",
+            crossDomain: true,
+            data: post_string,
+            cache: false,
+            dataType: 'json',
+            timeout: 5000,
+            success: function (response) {
+                if(response.status == 200){
+                    window.confirm("亲 已經成功刪除貼文.");
+                    $("#flashMessage").html("亲 已經成功刪除貼文...");
+                    $("#flashMessage").show();
+                    getAllPost();
+                }
+                console.log(response);
+            },
+            error: function () {
+                alert("亲 無法連線到伺服器");
+            }
+        });
+    }
+    else {
+        console.log("You pressed Cancel!");
+    }
+}
+
+
+
+function getAllPost() {
+	data="user_id="+$("#user_id").text()+"&community_id="+$("#community_id").text();
+    // 發出POST的GET請求取得所有會員列表
+    $.ajax({
+            type: "GET",
+            url: "api/post.do",
+            crossDomain: true,
+            cache: false,
+            data:data,
+            dataType: 'json',
+            timeout: 5000,
+            success: function (response) {
+                if(response.status == 200){
+                    updateTable(response.response.data);
+                    //updateSQLTable(response.response);
+                }
+                console.log(response);
+                console.log("success");
+            },
+            error: function () {
+                alert("亲 無法連線到伺服器！");
+            }
+    });
+}
+
+
+function getAllComment(data) {
+
+
+
+    $.ajax({
+            type: "GET",
+            url: "api/comment.do",
+            crossDomain: true,
+            cache: false,
+            data:data,
+            dataType: 'json',
+            timeout: 5000,
+            success: function (response) {
+                if(response.status == 200){
+                    updateCommentTable(response.response.data);
+                    //updateSQLTable(response.response);
+                }
+                console.log(response);
+                console.log("success");
+            },
+            error: function () {
+                alert("亲 無法連線到伺服器！");
+            }
+    });
+}
+
+
+function deleteComment(id) {
+    var check = window.confirm("亲 確認刪除留言？");
+    if (check == true) {
+        console.log("You pressed OK!");
+        var request = {'comment_id': id};
+        var comment_string = JSON.stringify(request);
+        $.ajax({
+            type: "DELETE",
+            url: "api/comment.do",
+            crossDomain: true,
+            data: comment_string,
+            cache: false,
+            dataType: 'json',
+            timeout: 5000,
+            success: function (response) {
+                if(response.status == 200){
+                    $("#flashMessage").html("亲 已經成功刪除留言...");
+                    $("#flashMessage").show();
+                }
+                console.log(response);
+            },
+            error: function () {
+                alert("亲 無法連線到伺服器");
+            }
+        });
+    }
+    else {
+        console.log("You pressed Cancel!");
+    }
+}
+
+
+
+function updateTable(data) {
+    $(".column2").empty();
+
+    $.each(data, function(index, value) {
+      var post_html = '';
+      post_html+='<div class="post">';
+      post_html+='<form method="DELETE" action="#">';
+      post_html+='<a style="float: right; display:inline;" href="javascript: deletePost('+value['post_id']+')">Delete</a>';
+      post_html+='<div><h3>' + value['content'] +'</h3></div></form>';
+      post_html+='<div id="plus'+value['post_id']+'"></div>';
+
+      $(".column2").append(post_html);
+      var data="";
+      data="post_id=" + value['post_id'];
+      getAllComment(data);
+
+      var post_html = '';
+      post_html='</div>';
+      $(".column2").append(post_html);
+
+
+    });
+
+
+}
+
+function updateCommentTable(data) {
+	console.log("I am in comment table");
+
+    $.each(data, function(index, value) {
+      console.log(data);
+      var comment_html = '';
+      comment_html+='<form method="DELETE" action="#">';
+      comment_html+='<a style="float: right; display:inline;" href="javascript: deleteComment(' + value['comment_id'] + ')">Delete</a>';
+      comment_html+='<ul><li><h4 style="display:inline;"><div id="comment_id" style="display:inline;">' + value['content'] + '</div></h4></li></ul></form>';
+      var find="plus"+value['post_id'];
+
+      $('#'+find).append(comment_html);
+    	console.log("APPEND");
+    });
+
+
+
+    var post_html = '';
+    post_html='</div>';
+    $(".column2").append(post_html);
+}
+
+
+
+/*
+
+<div class="post">;
+    <form method="DELETE" action="#">;
+      <a style="float: right; display:inline;" href="javascript: deletePost()">Delete</a>
+      <div><h3>' + value['content'] +'</h3></div>
+    </form>
+
+    <form method="DELETE" action="#">
+      <a style="float: right; display:inline;" href="javascript: deleteComment(value['comment_id'])">Delete</a>
+      <ul><li><h4 style="display:inline;"><div id="comment_id" style="display:inline;">value['content']</div></h4></li></ul>
+    </form>
+
+</div>
+
+*/
+
+
+
+
+// 更新SQL指令歷史表格
+function updateSQLTable(data) {
+    $("#sql_log > tbody").empty();
+    var post_html = "";
+
+    sql_num = 0;
+    sql_num += 1
+
+    post_html += '<tr>';
+    post_html += '<td>' + sql_num + '</td>';
+    post_html += '<td>' + data.sql + '</td>';
+    post_html += '<td style="text-align: right">' + '0' + '</td>';
+    post_html += '<td style="text-align: right">' + data.row + '</td>';
+    post_html += '<td style="text-align: right">' + data.row + '</td>';
+    post_html += '<td style="text-align: right">' + time + '</td>';
+    post_html += '</tr>';
+    $("#sql_log > tbody").append(post_html);
+    $("#sql_summary").html("(default) " + data.row + " queries took ");
+}
+function go_to_postlist(){location.href = "http://localhost:8090/NCU_MIS_SA/Post_list.html?&user_id="+ myuserId+"&community_id="+community_id+"&email="+email+"&phone_number="+phone_number+"&name="+name+"&age="+age+"&birthday="+birthday+"&gender="+gender+"&work="+work+"&interest="+interest;};
+
+
+
+$(document).ready(function() {
+    getAllPost();
+	$("#postlist_btn").click(function() {go_to_postlist()});
+
+});
+
+  </script>
+
+</div><!-- ... row ... -->
+
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>來留個言</title>
+    <link href="statics/icon/favicon.ico" type="image/x-icon" rel="icon">
+    <link href="statics/icon/favicon.ico" type="image/x-icon" rel="shortcut icon">
+    <link rel="stylesheet" type="text/css" href="statics/css/cake.generic.css">
+
+    <script src="statics/js/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div id="container">
+        <div id="header">
+            <h1><a href="http://cakephp.org/">CakePHP: the rapid development php framework</a></h1>
+            <div id="user_id" class="user-info" style="visibility: hidden; display:inline;">6</div>
+            <div id="community_id" class="user-info" style="visibility: hidden; display:inline;">6</div>
+            <div id="post_id" class="user-info" style="visibility: hidden; display:inline;">6</div>
+        <div id="content">
+            <h2>來留個言</h2>
+ 	           <form>
+					<div class="submit">
+			 			<input type="button" value="新增留言" id="comment_btn">
+					</div>
+				</form>
+
+            <a href="main.html"><font color="#367889">回首頁</font></a>
+            <div id="flashMessage" class="message" style="display: none;"></div>
+            <table id="table">
+                <thead>
+                    <tr>
+                        <th>留言編號</th>
+                        <th>留言內容</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <script type="text/javascript">
+			function go_to_comment(){location.href = "http://localhost:8090/NCU_MIS_SA/comment.html?&post_id="+post_id;}
+
+            function getUrlVars() {
+				var vars = {};
+					var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+					vars[key] = value;
+				});
+				return vars;
+			}
+			var post_id = getUrlVars()["post_id"]; // 1
+			$("#post_id").text(post_id);
+
+                // 全域變數紀錄SQL指令下的次數
+                var sql_num = 0;
+                
+                function getAllComment() {
+                	var post_id=$("#post_id").text();
+                	var data="";
+                	data+="post_id="+post_id;
+                    // 發出POST的GET請求取得所有文章列表
+                    $.ajax({
+                            type: "GET",
+                            url: "api/comment.do",
+                            crossDomain: true,
+                            cache: false,
+                            data:data,
+                            dataType: 'json',
+                            timeout: 5000,
+                            success: function (response) {
+                                if(response.status == 200){
+                                    updateTable(response.response.data);
+                                    console.log(response);
+                                    updateSQLTable(response.response);
+                                }
+                                console.log(response);
+                            },
+                            error: function () {
+                                alert("無法連線到伺服器！");
+                            }
+                    });
+                }
+                
+                // 更新會員列表表格
+                function updateTable(data) {
+                    $("#table > tbody").empty();
+                    var table_html = '';
+                    $.each(data, function(index, value) {
+                        table_html += '<tr><td scope="row">' + value['post_id'] + '</td>';
+                        table_html += '<td>' + value['content'] + '</td>';
+                    })
+
+                    $("#table > tbody").append(table_html);
+                }
+                
+                var sql_num = 0;
+                
+                // 更新SQL指令歷史表格
+                function updateSQLTable(data) {
+                    $("#sql_log > tbody").empty();
+                    var time = (data.time / 1000000).toFixed(2);
+                    var table_html = "";
+                    
+                    sql_num = 0;
+                    sql_num += 1
+
+                    table_html += '<tr>';
+                    table_html += '<td>' + sql_num + '</td>';
+                    table_html += '<td>' + data.sql + '</td>';
+                    table_html += '<td style="text-align: right">' + '0' + '</td>';
+                    table_html += '<td style="text-align: right">' + data.row + '</td>';
+                    table_html += '<td style="text-align: right">' + data.row + '</td>';
+                    table_html += '<td style="text-align: right">' + time + '</td>';
+                    table_html += '</tr>';
+                    $("#sql_log > tbody").append(table_html);
+                    $("#sql_summary").html("(default) " + data.row + " queries took " + time + " ms");
+                }
+                $(document).ready(function() {
+                    getAllComment();
+					$("#comment_btn").click(function() {go_to_comment()});
+
+                });
+            </script>
+        </div>
+        <div id="footer">
+            <a href="http://www.cakephp.org/" target="_blank" id="cake-powered"><img src="statics/img/cake.power.gif" alt="CakePHP: the rapid development php framework" border="0"></a>
+            <p>CakePHP 2.6.10</p>
+        </div>
+    </div>
+    <table class="cake-sql-log" id="sql_log" summary="Cake SQL Log" cellspacing="0">
+        <caption id="sql_summary">(default) 0 query took 0 ms</caption>
+        <thead>
+            <tr>
+                <th>Nr</th>
+                <th>Query</th>
+                <th>Error</th>
+                <th>Affected</th>
+                <th>Num. rows</th>
+                <th>Took (ms)</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</body>
+
+</html>

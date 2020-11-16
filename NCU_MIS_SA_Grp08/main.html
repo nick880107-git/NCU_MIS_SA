@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>CakePHP: the rapid development php framework: Members</title>
+	<link href="statics/icon/favicon.ico" type="image/x-icon" rel="icon">
+	<link href="statics/icon/favicon.ico" type="image/x-icon" rel="shortcut icon">
+	<link rel="stylesheet" type="text/css" href="statics/css/cake.generic.css">
+	<script src="statics/js/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+</head>
+
+<body>
+	<div id="container">
+        <div id="header">
+            <h1><a href="http://cakephp.org/">CakePHP: the rapid development php framework</a></h1>
+        </div>
+
+		<script type="text/javascript">
+		function getUrlVars() {
+			var vars = {};
+			var parts = window.location.href.replace(
+				/[?&]+([^=&]+)=([^&]*)/gi, function(m,key, value) {vars[key] = value;});
+			return vars;
+		}
+		$(document).ready(function() {
+			$("#user_table > tbody").append(table);
+			$("#community_btn").click(function() {go_to_communityList();});
+			//$("#postlist_btn").click(function() {go_to_postlist();});
+
+			$("#member_btn").click(function() {go_to_memberList();});
+			$("#inbox_btn").click(function() {go_to_inbox();});
+			$("#edit_page_btn").click(function() {go_to_edit_page()});
+			$("#log_in_btn").click(function() {go_to_log_in()});
+			getAllFriend();
+			getAllCommunity();
+		});
+			var user_id = getUrlVars()["user_id"]; // 1
+			var myuserId = user_id;//單純的複製一筆user_id
+			var email = getUrlVars()["email"]; // 2
+			var phone_number = getUrlVars()["phone_number"]; // 3
+			var name = getUrlVars()["name"]; // 4
+			name = decodeURI(name);
+			var age = getUrlVars()["age"]; // 5
+			var birthday = getUrlVars()["birthday"]; // 6
+			var gender = getUrlVars()["gender"]; // 7
+			if (gender == "true") {gender = "男性";} 
+			else {gender = "女性";}
+			var work = getUrlVars()["work"]; // 8
+			work = decodeURI(work);
+			var interest = getUrlVars()["interest"]; // 9
+			interest = decodeURI(interest);
+			
+			var table = "";
+			table += '<tr><th>編號<td>' + user_id + '</tr>';
+			table += '<tr><th>信箱<td>' + email + '</tr>';
+			table += '<tr><th>電話<td>' + phone_number + '</tr>';
+			table += '<tr><th>名字<td>' + name + '</tr>';
+			table += '<tr><th>年齡<td>' + age + '</tr>';
+			table += '<tr><th>生日<td>' + birthday + '</tr>';
+			//table += '<tr><th>性別<td>' + gender + '</tr>';
+			table += '<tr><th>工作<td>' + work + '</tr>';
+			table += '<tr><th>興趣<td>' + interest + '</tr>';
+				
+			//用user_id & FriendMatchController的doGet 列出朋友有誰~
+			function getAllFriend(){
+
+				data_string = "user_id=" + user_id;
+				$.ajax({
+					type : "GET",
+					url : "api/friend.do",
+					crossDomain : true,
+					data : data_string,
+					cache : false,
+					dataType : 'json',
+					timeout : 5000,
+					success : function(response) {
+						$('#flashMessage').html(response.message);
+						$('#flashMessage').show();
+						if (response.status == 200) {
+							updateSQLTable(response.response);
+							updateFriendTable(response.response.data1);
+							updateFriendTable(response.response.data2);
+
+							console.log(response.response.data1);
+							console.log(response.response.data2);
+							}
+						
+						},
+						error : function() {
+							//alert("沒有你這個人呦 呵呵^_^");
+							}
+						});
+			}
+			
+			function getAllCommunity(){
+				data_string = "user_id=" + user_id;
+				$.ajax({
+					type : "GET",
+					url : "api/user_community.do",
+					crossDomain : true,
+					data : data_string,
+					cache : false,
+					dataType : 'json',
+					timeout : 5000,
+					success : function(response) {
+						$('#flashMessage').html(response.message);
+						$('#flashMessage').show();
+						if (response.status == 200) {
+							updateSQLTable(response.response);
+							updateCommunityTable(response.response.data);
+							}
+						},
+						error : function() {
+							//alert("沒有你這個人呦 呵呵^_^");
+							}
+						});
+			}
+				function go_to_communityList() {location.href = "http://localhost:8090/NCU_MIS_SA/communitylist.html?&user_id="+ myuserId+"&email="+email+"&phone_number="+phone_number+"&name="+name+"&age="+age+"&birthday="+birthday+"&gender="+gender+"&work="+work+"&interest="+interest;}
+				//function go_to_postlist() {location.href = "http://localhost:8090/NCU_MIS_SA/postlist.html?&user_id="+ myuserId+"&email="+email+"&phone_number="+phone_number+"&name="+name+"&age="+age+"&birthday="+birthday+"&gender="+gender+"&work="+work+"&interest="+interest;}
+
+				function go_to_memberList() {location.href = "http://localhost:8090/NCU_MIS_SA/userlist.html?&user_id="+ myuserId+"&email="+email+"&phone_number="+phone_number+"&name="+name+"&age="+age+"&birthday="+birthday+"&gender="+gender+"&work="+work+"&interest="+interest;}
+				function go_to_inbox() {location.href = "http://localhost:8090/NCU_MIS_SA/Inboxlist.html?&user_id="+ myuserId+"&email="+email+"&phone_number="+phone_number+"&name="+name+"&age="+age+"&birthday="+birthday+"&gender="+gender+"&work="+work+"&interest="+interest;}
+				function go_to_edit_page() {location.href = "http://localhost:8090/NCU_MIS_SA/edit2.html?&user_id="+ myuserId+"&email="+email+"&phone_number="+phone_number+"&name="+name+"&age="+age+"&birthday="+birthday+"&gender="+gender+"&work="+work+"&interest="+interest;}
+				function go_to_log_in(){location.href = "http://localhost:8090/NCU_MIS_SA/login2.html"};
+				
+				function updateCommunityTable(data) {					
+					$("#Communitytable > tbody").empty();
+						var table_html = '';
+						id = 0;
+						$.each(data,function(index, value) {
+	                    	id = id + 1;
+							table_html += '<tr><td scope="row">' + value.data[0].name + '</td>';
+	                    	table_html += '<td>' + value.data[0].content + '</td>';
+	                    	table_html += '<td>' + value.data[0].total_member + '</td>';
+	                    	//table_html += '<td>' + '<a href="community.html?community_id=' + value.data[0].community_id+ "&user_id="+myuserId+"&email="+email+"&phone_number="+phone_number+"&name="+name+"&age="+age+"&birthday="+birthday+"&gender="+gender+"&work="+work+"&interest="+interest+'">進入社群</a></td></tr>';
+	                    	table_html += '<td>' + '<a href="Post_list.html?community_id=' + value.data[0].community_id+ "&user_id="+myuserId+"&email="+email+"&phone_number="+phone_number+"&name="+name+"&age="+age+"&birthday="+birthday+"&gender="+gender+"&work="+work+"&interest="+interest+'">進入社群</a></td></tr>';
+	              		})
+	                $("#Communitytable > tbody").append(table_html);
+					
+				}
+
+				id = 0;
+				// 更新friend列表表格
+				function updateFriendTable(data) {
+					//$("#Friendtable > tbody").empty();
+						var table_html = '';
+						$.each(data,function(index, value) {
+							//Ajax: 在這裡已經取得user_2的id了，所以可以在用user.do的Get去Get到有興趣的欄位
+							//因為each會多讀一筆，所以要記得跳掉break優~~~
+							if(value.match_id == undefined){
+								return false;
+							}
+	                    	id = id + 1; 
+							table_html += '<tr><td scope="row">' + id + '</td>';
+	                    	table_html += '<td>' + value.data[0].name + '</td>';
+	                    	table_html += '<td>' + value.data[0].birthday + '</td>';
+	                    	table_html += '<td>' + value.data[0].interest + '</td>';
+	                    	table_html += '<td>' + value.data[0].work + '</td>';
+	                    	table_html += '<td>' + value.data[0].phone_number + '</td>';
+	                    	table_html += '<td>' + value.data[0].email + '</td>';
+	                    	table_html += '<td>' + '<a href="chatroom.html?match_id=' + value.match_id + "&user2_id=" +value.data[0].user_id+ "&user_id="+myuserId+"&email="+email+"&phone_number="+phone_number+"&name="+name+"&age="+age+"&birthday="+birthday+"&gender="+gender+"&work="+work+"&interest="+interest+'">聊天室</a> | ';
+	                        table_html += '<a href="javascript: deleteFriend(' + value.match_id + ');">刪除好友</a></td></tr>';
+	              		})
+	              		//console.log(data[2][0]data[0].name);
+	                $("#Friendtable > tbody").append(table_html);
+				}
+						
+				function deleteFriend(id) {
+                    var check = window.confirm("確認刪除好友？");
+                    if (check == true) {
+                        var request = {'match_id': id};
+                        var data_string = JSON.stringify(request);
+                        $.ajax({
+                            type: "DELETE",
+                            url: "api/friend.do",
+                            crossDomain: true,
+                            data: data_string,
+                            cache: false,
+                            dataType: 'json',
+                            timeout: 5000,
+                            success: function (response) {
+                                if(response.status == 200){
+                                    $("#flashMessage").html("成功! 已經成功刪除好友...");
+                                    $("#flashMessage").show();
+                                    window.location.reload();
+                                }
+                            },
+                            error: function () {
+                                alert("無法連線到伺服器！");
+                            }
+                        });
+                    }
+                    else {
+                        console.log("You pressed Cancel!");
+                    }
+                    //getAllFriend();
+                }
+				function updateSQLTable(data) {
+					$("#sql_log > tbody").empty();
+					var time = (data.time / 1000000).toFixed(2);
+					var table_html = "";
+					table_html += '<tr>';
+					table_html += '<td>' + '1' + '</td>';
+					table_html += '<td>' + data.sql + '</td>';
+					table_html += '<td style="text-align: right">'+ '0' + '</td>';
+					table_html += '<td style="text-align: right">'+ data.row + '</td>';
+					table_html += '<td style="text-align: right">'+ data.row + '</td>';
+					table_html += '<td style="text-align: right">'+ time + '</td>';
+					table_html += '</tr>';
+					$("#sql_log > tbody").append(table_html);
+					$("#sql_summary").html("(default) " + data.row+ " queries took " + time+ " ms");}
+				
+	</script>
+	<div id="content">
+	    <h2>歡迎來到交友系統</h2>
+	    <form>
+			<div class="submit">
+				<input type="button" value="登出" id="log_in_btn">
+			</div>
+		</form>
+		
+		<table id="user_table" cellspacing="0">
+			<tbody>
+			</tbody>
+		</table>
+		<form>
+			<div class="submit">
+				<input type="button" value="編輯基本資料" id="edit_page_btn">
+			</div>
+			<div class="submit">
+				<input type="button" value="查看收件匣" id="inbox_btn">
+			</div>
+		</form>
+		<hr></hr>
+		<hr></hr>
+		
+		<h2>所屬社群:</h2>
+		<table id="Communitytable">
+			<thead>
+				<tr>
+					<th>社群名稱</th>
+					<th>介紹</th>
+					<th>人數</th>
+					<th>功能</th>
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+		<form>
+			<div class="submit">
+				<input type="button" value="社群列表" id="community_btn">
+			</div>
+		</form>
+
+		<hr></hr>
+		<hr></hr>
+
+		<h2>擁有好友:</h2>
+			<table id="Friendtable">
+			<thead>
+				<tr>
+					<th>好友編號</th>
+					<th>名字</th>
+					<th>生日</th>
+					<th>興趣</th>
+					<th>工作</th>
+					<th>手機</th>
+					<th>信箱</th>
+					<th>功能</th>
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+		
+		<form>
+			<div class="submit">
+				<input type="button" value="潛在朋友都在這" id="member_btn">
+			</div>
+		</form>
+	</div>
+        <div id="footer">
+            <a href="http://www.cakephp.org/" target="_blank" id="cake-powered"><img src="statics/img/cake.power.gif" alt="CakePHP: the rapid development php framework" border="0"></a>
+            <p>CakePHP 2.6.10</p>
+        </div>
+	</div>
+	<table class="cake-sql-log" id="sql_log" summary="Cake SQL Log" cellspacing="0">
+		<caption id="sql_summary">(default) 0 queries took 0 ms</caption>
+		<thead>
+			<tr>
+				<th>Nr</th>
+				<th>Query</th>
+				<th>Error</th>
+				<th>Affected</th>
+				<th>Num. rows</th>
+				<th>Took (ms)</th>
+			</tr>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
+</body>
+
+</html>
